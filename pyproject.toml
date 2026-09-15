@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "classproduct"
+version = "0.1.0"
+description = "Проект каталога продуктов с категориями"
+authors = ["Diana Mayorova <dukaidiana18@gmail.com>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.12"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+black = "^24.0.0"
+mypy = "^1.8.0"
+flake8 = "^7.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+# --- НАСТРОЙКИ ИНСТРУМЕНТОВ ---
+
+[tool.black]
+line-length = 119
+
+[tool.mypy]
+exclude = [".venv", "venv", "build"]
+disallow_untyped_defs = true
+ignore_missing_imports = true
