@@ -1,0 +1,9 @@
+[flake8]
+# Исключаем системные папки и окружение из проверки
+exclude = .git, __pycache__, .venv, venv, .pytest_cache, .idea
+
+# Увеличиваем длину строки
+max-line-length = 119
+
+# Игнорируем конфликты форматирования между Flake8 и Black
+extend-ignore = E203

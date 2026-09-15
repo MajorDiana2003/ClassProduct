@@ -6,7 +6,7 @@ env/
 *.pyc
 __pycache__/
 .pytest_cache/
-
+.coverage
 # --- Настройки среды разработки ---
 .idea/
 
