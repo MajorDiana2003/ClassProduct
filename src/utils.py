@@ -1,7 +1,6 @@
 import json
 import os
 
-
 from src.models import Category, Product
 
 

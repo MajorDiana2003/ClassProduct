@@ -111,3 +111,14 @@ def test_mixin_repr(capsys: pytest.CaptureFixture[str]) -> None:
     _ = Product("Тест", "Описание", 100.0, 2)
     captured = capsys.readouterr()
     assert "Product('Тест', 'Описание', 100.0, 2)" in captured.out
+
+
+def test_abstract_classes_cannot_be_instantiated() -> None:
+    """Проверяем, что базовые классы защищены от прямого создания экземпляров."""
+    from src.models import AbstractStorage, BaseProduct
+
+    with pytest.raises(TypeError):
+        BaseProduct()  # type: ignore
+
+    with pytest.raises(TypeError):
+        AbstractStorage()  # type: ignore
