@@ -2,16 +2,34 @@ import logging
 import sys
 from typing import Any
 
-# Настройка логирования с явным указанием обычного потока вывода sys.stdout
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    stream=sys.stdout,
-)
+# 1. Создаем корневой логгер
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+
+if logger.hasHandlers():
+    logger.handlers.clear()
+
+# Общий формат для всех логов
+log_formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+
+# 2. Настраиваем обработчик для INFO (выводит только сообщения INFO в sys.stdout — белый цвет)
+info_handler = logging.StreamHandler(sys.stdout)
+info_handler.setLevel(logging.INFO)
+# Фильтр, чтобы этот обработчик пропускал ТОЛЬКО уровень INFO и ниже
+info_handler.addFilter(lambda record: record.levelno <= logging.INFO)
+info_handler.setFormatter(log_formatter)
+logger.addHandler(info_handler)
+
+# 3. Настраиваем обработчик для ОШИБОК (выводит WARNING, ERROR и CRITICAL в sys.stderr — красный цвет)
+error_handler = logging.StreamHandler(sys.stderr)
+error_handler.setLevel(logging.WARNING)
+error_handler.setFormatter(log_formatter)
+logger.addHandler(error_handler)
 
 
 class Product:
-    """Класс для представления продукта."""
+    """Базовый класс для представления продукта."""
 
     name: str
     description: str
@@ -30,10 +48,11 @@ class Product:
         return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
 
     def __add__(self, other: Any) -> float:
-        """Складывает общую стоимость двух продуктов на складе (цена * количество)."""
-        if not isinstance(other, Product):
-            logging.error(f"Попытка сложения Product с объектом другого типа: {type(other)}")
-            raise TypeError("Складывать можно только объекты класса Product")
+        """Складывает общую стоимость двух продуктов ТОЛЬКО одинакового класса."""
+        # Строгая проверка на строгое совпадение классов через type()
+        if type(self) is not type(other):
+            logging.error(f"Попытка сложения разных классов: {type(self).__name__} и {type(other).__name__}")
+            raise TypeError("Складывать можно только товары одного и того же класса")
 
         total_cost = (self.price * self.quantity) + (other.price * other.quantity)
         logging.info(f"Выполнено сложение продуктов '{self.name}' и '{other.name}'. Результат: {total_cost} руб.")
@@ -81,6 +100,57 @@ class Product:
         self._price = new_price
 
 
+class Smartphone(Product):
+    """Класс-наследник для смартфонов."""
+
+    efficiency: float
+    model: str
+    memory: int
+    color: str
+
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        price: float,
+        quantity: int,
+        efficiency: float,
+        model: str,
+        memory: int,
+        color: str,
+    ) -> None:
+        super().__init__(name, description, price, quantity)
+        self.efficiency = efficiency
+        self.model = model
+        self.memory = memory
+        self.color = color
+        logging.info(f"Смартфон успешно инициализирован: '{self.model}'")
+
+
+class LawnGrass(Product):
+    """Класс-наследник для газонной травы."""
+
+    country: str
+    germination_period: str
+    color: str
+
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        price: float,
+        quantity: int,
+        country: str,
+        germination_period: str,
+        color: str,
+    ) -> None:
+        super().__init__(name, description, price, quantity)
+        self.country = country
+        self.germination_period = germination_period
+        self.color = color
+        logging.info(f"Газонная трава успешно инициализирована: '{self.name}'")
+
+
 class Category:
     """Класс для представления категории продуктов."""
 
@@ -103,8 +173,13 @@ class Category:
 
         logging.info(f"Категория успешно инициализирована: '{self.name}'")
 
-    def add_product(self, product: Product) -> None:
-        """Добавляет продукт в приватный список товаров категории."""
+    def add_product(self, product: Any) -> None:
+        """Добавляет продукт в приватный список товаров категории с валидацией типа."""
+        #  Проверка на принадлежность к классу Product или его наследникам через isinstance()
+        if not isinstance(product, Product):
+            logging.error(f"Попытка добавить некорректный объект в категорию: {type(product).__name__}")
+            raise TypeError("В категорию можно добавлять только продукты или их наследников")
+
         self.__products.append(product)
         Category.product_count += 1
         logging.info(f"В категорию '{self.name}' добавлен продукт: '{product.name}'")
@@ -130,7 +205,6 @@ class CategoryIterator:
     index: int
 
     def __init__(self, category_obj: Category) -> None:
-
         self.category_products = category_obj.__dict__.get(f"_{Category.__name__}__products", [])
         self.index = 0
         logging.info(f"Создан итератор для категории '{category_obj.name}'")
