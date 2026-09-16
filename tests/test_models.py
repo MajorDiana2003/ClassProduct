@@ -1,6 +1,6 @@
 import pytest
 
-from src.models import Category, Product
+from src.models import Category, CategoryIterator, LawnGrass, Product, Smartphone
 
 
 def test_product_init(sample_product: Product) -> None:
@@ -71,7 +71,6 @@ def test_product_str(sample_product: Product) -> None:
 
 def test_category_str(sample_category: Category) -> None:
     """Тест магического метода __str__ для класса Category."""
-    # В фикстуре 1 продукт с количеством 5, значит общее количество = 5
     assert str(sample_category) == "Смартфоны, количество продуктов: 5 шт."
 
 
@@ -94,7 +93,6 @@ def test_product_addition_type_error(sample_product: Product) -> None:
 
 def test_category_iterator(sample_category: Category) -> None:
     """Тест работы класса-итератора CategoryIterator."""
-    from src.models import CategoryIterator
 
     iterator = CategoryIterator(sample_category)
 
@@ -104,3 +102,35 @@ def test_category_iterator(sample_category: Category) -> None:
     # Проверяем, что итератор выдал ровно 1 продукт и это наш Samsung
     assert len(iterated_products) == 1
     assert iterated_products[0].name == "Samsung Galaxy S23 Ultra"
+
+
+def test_smartphone_init() -> None:
+    """Тест инициализации и атрибутов класса Smartphone."""
+    phone = Smartphone("Iphone 15", "512GB", 210000.0, 8, 98.2, "15", 512, "Gray space")
+    assert phone.name == "Iphone 15"
+    assert phone.efficiency == 98.2
+    assert phone.memory == 512
+
+
+def test_lawngrass_init() -> None:
+    """Тест инициализации и атрибутов класса LawnGrass."""
+    grass = LawnGrass("Газонная трава", "Элитная", 500.0, 20, "Россия", "7 дней", "Зеленый")
+    assert grass.name == "Газонная трава"
+    assert grass.country == "Россия"
+    assert grass.germination_period == "7 дней"
+
+
+def test_add_products_different_classes() -> None:
+    """Тест, что сложение разных классов (Smartphone + LawnGrass) вызывает TypeError."""
+    phone = Smartphone("Iphone 15", "512GB", 210000.0, 8, 98.2, "15", 512, "Gray space")
+    grass = LawnGrass("Газонная трава", "Элитная", 500.0, 20, "Россия", "7 дней", "Зеленый")
+
+    with pytest.raises(TypeError):
+        _ = phone + grass
+
+
+def test_add_product_to_category_validation() -> None:
+    """Тест, что добавление объекта, не являющегося Product или его наследником, вызывает TypeError."""
+    category = Category("Смартфоны", "Описание", [])
+    with pytest.raises(TypeError):
+        category.add_product("Просто строка вместо объекта")
