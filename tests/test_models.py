@@ -111,3 +111,23 @@ def test_mixin_repr(capsys: pytest.CaptureFixture[str]) -> None:
     _ = Product("Тест", "Описание", 100.0, 2)
     captured = capsys.readouterr()
     assert "Product('Тест', 'Описание', 100.0, 2)" in captured.out
+
+
+def test_zero_quantity_product_raises_error() -> None:
+    """Тест, что создание продукта с нулевым количеством вызывает ZeroQuantityError."""
+    from src.models import ZeroQuantityError
+
+    with pytest.raises(ZeroQuantityError):
+        _ = Product("Тест", "Описание", 100.0, 0)
+
+
+def test_category_middle_price(sample_category: Category) -> None:
+    """Тест расчета среднего ценника в категории с продуктами."""
+    # В фикстуре sample_category один продукт с ценой 180000.00
+    assert sample_category.middle_price() == 180000.00
+
+
+def test_empty_category_middle_price() -> None:
+    """Тест, что пустая категория возвращает 0.0 при расчете средней цены без ZeroDivisionError."""
+    empty_cat = Category("Пустая", "Описание", [])
+    assert empty_cat.middle_price() == 0.0
