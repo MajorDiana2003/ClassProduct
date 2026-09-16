@@ -131,3 +131,14 @@ def test_empty_category_middle_price() -> None:
     """Тест, что пустая категория возвращает 0.0 при расчете средней цены без ZeroDivisionError."""
     empty_cat = Category("Пустая", "Описание", [])
     assert empty_cat.middle_price() == 0.0
+
+
+def test_abstract_classes_cannot_be_instantiated() -> None:
+    """Проверяем, что базовые классы защищены от прямого создания экземпляров."""
+    from src.models import AbstractStorage, BaseProduct
+
+    with pytest.raises(TypeError):
+        BaseProduct()  # type: ignore
+
+    with pytest.raises(TypeError):
+        AbstractStorage()  # type: ignore
