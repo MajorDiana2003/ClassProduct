@@ -62,3 +62,45 @@ def test_price_decrease_cancelled(sample_product: Product, monkeypatch: pytest.M
     monkeypatch.setattr("builtins.input", lambda _: "n")
     sample_product.price = 150000.0
     assert sample_product.price == 180000.0
+
+
+def test_product_str(sample_product: Product) -> None:
+    """Тест магического метода __str__ для класса Product."""
+    assert str(sample_product) == "Samsung Galaxy S23 Ultra, 180000.0 руб. Остаток: 5 шт."
+
+
+def test_category_str(sample_category: Category) -> None:
+    """Тест магического метода __str__ для класса Category."""
+    # В фикстуре 1 продукт с количеством 5, значит общее количество = 5
+    assert str(sample_category) == "Смартфоны, количество продуктов: 5 шт."
+
+
+def test_product_addition(sample_product: Product) -> None:
+    """Тест магического метода сложения __add__ для двух продуктов."""
+    # Создаем второй продукт для теста сложения
+    iphone = Product("Iphone 15", "512GB", 210000.0, 8)
+
+    # Расчет стоимости на складе:
+    # (180000.0 * 5) + (210000.0 * 8) = 900000.0 + 1680000.0 = 2580000.0
+    expected_total = 2580000.0
+    assert sample_product + iphone == expected_total
+
+
+def test_product_addition_type_error(sample_product: Product) -> None:
+    """Тест, что сложение Product со сторонним типом данных вызывает TypeError."""
+    with pytest.raises(TypeError):
+        _ = sample_product + "Строка вместо объекта класса Product"
+
+
+def test_category_iterator(sample_category: Category) -> None:
+    """Тест работы класса-итератора CategoryIterator."""
+    from src.models import CategoryIterator
+
+    iterator = CategoryIterator(sample_category)
+
+    # Собираем продукты, перебирая созданный итератор в цикле
+    iterated_products = [product for product in iterator]
+
+    # Проверяем, что итератор выдал ровно 1 продукт и это наш Samsung
+    assert len(iterated_products) == 1
+    assert iterated_products[0].name == "Samsung Galaxy S23 Ultra"
