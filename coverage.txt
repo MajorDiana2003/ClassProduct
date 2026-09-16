@@ -1,4 +1,4 @@
-﻿Name              Stmts   Miss  Cover
+Name              Stmts   Miss  Cover
 -------------------------------------
 src\__init__.py       0      0   100%
 src\models.py       141      5    96%
