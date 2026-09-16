@@ -1,6 +1,6 @@
 import pytest
 
-from src.models import Category, Product
+from src.models import Category, CategoryIterator, LawnGrass, Product, Smartphone
 
 
 def test_product_init(sample_product: Product) -> None:
@@ -62,3 +62,75 @@ def test_price_decrease_cancelled(sample_product: Product, monkeypatch: pytest.M
     monkeypatch.setattr("builtins.input", lambda _: "n")
     sample_product.price = 150000.0
     assert sample_product.price == 180000.0
+
+
+def test_product_str(sample_product: Product) -> None:
+    """Тест магического метода __str__ для класса Product."""
+    assert str(sample_product) == "Samsung Galaxy S23 Ultra, 180000.0 руб. Остаток: 5 шт."
+
+
+def test_category_str(sample_category: Category) -> None:
+    """Тест магического метода __str__ для класса Category."""
+    assert str(sample_category) == "Смартфоны, количество продуктов: 5 шт."
+
+
+def test_product_addition(sample_product: Product) -> None:
+    """Тест магического метода сложения __add__ для двух продуктов."""
+    # Создаем второй продукт для теста сложения
+    iphone = Product("Iphone 15", "512GB", 210000.0, 8)
+
+    # Расчет стоимости на складе:
+    # (180000.0 * 5) + (210000.0 * 8) = 900000.0 + 1680000.0 = 2580000.0
+    expected_total = 2580000.0
+    assert sample_product + iphone == expected_total
+
+
+def test_product_addition_type_error(sample_product: Product) -> None:
+    """Тест, что сложение Product со сторонним типом данных вызывает TypeError."""
+    with pytest.raises(TypeError):
+        _ = sample_product + "Строка вместо объекта класса Product"
+
+
+def test_category_iterator(sample_category: Category) -> None:
+    """Тест работы класса-итератора CategoryIterator."""
+
+    iterator = CategoryIterator(sample_category)
+
+    # Собираем продукты, перебирая созданный итератор в цикле
+    iterated_products = [product for product in iterator]
+
+    # Проверяем, что итератор выдал ровно 1 продукт и это наш Samsung
+    assert len(iterated_products) == 1
+    assert iterated_products[0].name == "Samsung Galaxy S23 Ultra"
+
+
+def test_smartphone_init() -> None:
+    """Тест инициализации и атрибутов класса Smartphone."""
+    phone = Smartphone("Iphone 15", "512GB", 210000.0, 8, 98.2, "15", 512, "Gray space")
+    assert phone.name == "Iphone 15"
+    assert phone.efficiency == 98.2
+    assert phone.memory == 512
+
+
+def test_lawngrass_init() -> None:
+    """Тест инициализации и атрибутов класса LawnGrass."""
+    grass = LawnGrass("Газонная трава", "Элитная", 500.0, 20, "Россия", "7 дней", "Зеленый")
+    assert grass.name == "Газонная трава"
+    assert grass.country == "Россия"
+    assert grass.germination_period == "7 дней"
+
+
+def test_add_products_different_classes() -> None:
+    """Тест, что сложение разных классов (Smartphone + LawnGrass) вызывает TypeError."""
+    phone = Smartphone("Iphone 15", "512GB", 210000.0, 8, 98.2, "15", 512, "Gray space")
+    grass = LawnGrass("Газонная трава", "Элитная", 500.0, 20, "Россия", "7 дней", "Зеленый")
+
+    with pytest.raises(TypeError):
+        _ = phone + grass
+
+
+def test_add_product_to_category_validation() -> None:
+    """Тест, что добавление объекта, не являющегося Product или его наследником, вызывает TypeError."""
+    category = Category("Смартфоны", "Описание", [])
+    with pytest.raises(TypeError):
+        category.add_product("Просто строка вместо объекта")
