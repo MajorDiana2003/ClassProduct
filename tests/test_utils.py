@@ -12,8 +12,8 @@ def test_load_products_from_json() -> None:
     assert len(categories) == 2
     assert categories[0].name == "Смартфоны"
 
-    # Проверяем наличие продукта через новый строковый геттер .products
-    assert "samsung galaxy c23 ultra" in categories[0].products.lower()
+    # Обращаемся к первому объекту списка продуктов первой категории
+    assert categories[0].products[0].name == "Samsung Galaxy C23 Ultra"
 
     assert categories[1].name == "Телевизоры"
     assert Category.category_count == 2

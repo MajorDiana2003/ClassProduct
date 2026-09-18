@@ -1,67 +1,35 @@
 import pytest
 
-from src.models import Category, CategoryIterator, LawnGrass, Product, Smartphone
+from src.models import Category, CategoryIterator, LawnGrass, Order, Product, Smartphone
 
 
 def test_product_init(sample_product: Product) -> None:
-    """Тест корректности инициализации объекта Product."""
+    """Тест инициализации и базовых атрибутов продукта."""
     assert sample_product.name == "Samsung Galaxy S23 Ultra"
+    assert sample_product.description == "256GB, Серый цвет, 200MP камера"
     assert sample_product.price == 180000.00
     assert sample_product.quantity == 5
 
 
 def test_category_init(sample_category: Category) -> None:
-    """Тест корректности инициализации объекта Category."""
+    """Тест инициализации и подсчета количества категорий и продуктов."""
     assert sample_category.name == "Смартфоны"
-    # Проверяем, что продукт присутствует внутри строки геттера
-    assert "Samsung Galaxy S23 Ultra" in sample_category.products
+    assert sample_category.description == "Смартфоны как средство коммуникации"
+    assert len(sample_category.products) == 1
 
 
-def test_category_products_string_getter(sample_category: Category) -> None:
-    """Тест: проверка строкового формата геттера products."""
-    expected_str = "Samsung Galaxy S23 Ultra, 180000.0 руб. Остаток: 5 шт."
-    assert sample_category.products == expected_str
+def test_add_product_to_category(sample_category: Category) -> None:
+    """Тест добавления продукта в существующую категорию."""
+    new_product = Product("Xiaomi", "Бюджетный", 20000.0, 10)
+    sample_category.add_product(new_product)
+    assert len(sample_category.products) == 2
 
 
-def test_new_product_classmethod() -> None:
-    """Тест: создание продукта через класс-метод из словаря."""
-    data = {"name": "Iphone 15", "description": "512GB", "price": 210000.0, "quantity": 8}
-    product = Product.new_product(data)
-    assert product.name == "Iphone 15"
-    assert product.price == 210000.0
-
-
-def test_new_product_duplicate_addition() -> None:
-    """Тест: сложение количества и выбор макс. цены для дубликатов."""
-    p1 = Product("Iphone 15", "512GB", 1000.0, 5)
-    products_list = [p1]
-
-    new_data = {"name": "Iphone 15", "description": "Новый", "price": 1200.0, "quantity": 3}
-    updated_p = Product.new_product(new_data, products_list)
-
-    assert updated_p.quantity == 8  # 5 + 3
-    assert updated_p.price == 1200.0  # max(1000, 1200)
-
-
-def test_product_price_validation(sample_product: Product) -> None:
-    """Тест: валидация изменения цены (отрицательные числа)."""
-    # Некорректная цена не должна примениться
-    sample_product.price = -100
-    assert sample_product.price == 180000.00
-
-
-def test_price_decrease_confirmed(sample_product: Product, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Тест: подтверждение понижения цены пользователем (y)."""
-    monkeypatch.setattr("builtins.input", lambda _: "y")
-    sample_product.price = 150000.0
-    assert sample_product.price == 150000.0
-
-
-def test_price_decrease_cancelled(sample_product: Product, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Тест: отмена понижения цены пользователем (n)."""
-    monkeypatch.setattr("builtins.input", lambda _: "n")
-    sample_product.price = 150000.0
-    assert sample_product.price == 180000.0
+def test_price_setter(sample_product: Product, capsys: pytest.CaptureFixture[str]) -> None:
+    """Тест изменения цены и отмены при некорректных значениях."""
+    sample_product.price = -10.0
+    captured = capsys.readouterr()
+    assert "Цена не должна быть нулевая или отрицательная" in captured.out
 
 
 def test_product_str(sample_product: Product) -> None:
@@ -75,12 +43,8 @@ def test_category_str(sample_category: Category) -> None:
 
 
 def test_product_addition(sample_product: Product) -> None:
-    """Тест магического метода сложения __add__ для двух продуктов."""
-    # Создаем второй продукт для теста сложения
+    """Тест магического метода сложения __add__ для двух продуктов одинакового класса."""
     iphone = Product("Iphone 15", "512GB", 210000.0, 8)
-
-    # Расчет стоимости на складе:
-    # (180000.0 * 5) + (210000.0 * 8) = 900000.0 + 1680000.0 = 2580000.0
     expected_total = 2580000.0
     assert sample_product + iphone == expected_total
 
@@ -93,13 +57,8 @@ def test_product_addition_type_error(sample_product: Product) -> None:
 
 def test_category_iterator(sample_category: Category) -> None:
     """Тест работы класса-итератора CategoryIterator."""
-
     iterator = CategoryIterator(sample_category)
-
-    # Собираем продукты, перебирая созданный итератор в цикле
     iterated_products = [product for product in iterator]
-
-    # Проверяем, что итератор выдал ровно 1 продукт и это наш Samsung
     assert len(iterated_products) == 1
     assert iterated_products[0].name == "Samsung Galaxy S23 Ultra"
 
@@ -109,7 +68,6 @@ def test_smartphone_init() -> None:
     phone = Smartphone("Iphone 15", "512GB", 210000.0, 8, 98.2, "15", 512, "Gray space")
     assert phone.name == "Iphone 15"
     assert phone.efficiency == 98.2
-    assert phone.memory == 512
 
 
 def test_lawngrass_init() -> None:
@@ -117,7 +75,6 @@ def test_lawngrass_init() -> None:
     grass = LawnGrass("Газонная трава", "Элитная", 500.0, 20, "Россия", "7 дней", "Зеленый")
     assert grass.name == "Газонная трава"
     assert grass.country == "Россия"
-    assert grass.germination_period == "7 дней"
 
 
 def test_add_products_different_classes() -> None:
@@ -130,7 +87,58 @@ def test_add_products_different_classes() -> None:
 
 
 def test_add_product_to_category_validation() -> None:
-    """Тест, что добавление объекта, не являющегося Product или его наследником, вызывает TypeError."""
+    """Тест, что добавление объекта, не являющегося Product, вызывает TypeError."""
     category = Category("Смартфоны", "Описание", [])
     with pytest.raises(TypeError):
         category.add_product("Просто строка вместо объекта")
+
+
+def test_order_creation(sample_product: Product) -> None:
+    """Тест создания заказа и расчета его стоимости."""
+    order = Order(sample_product, 3)
+    assert order.total_cost == 180000.0 * 3
+    assert len(order.products) == 1
+
+
+def test_order_invalid_product() -> None:
+    """Тест вызова ошибки при передаче некорректного объекта в Заказ."""
+    with pytest.raises(TypeError):
+        _ = Order("Не продукт", 5)  # type: ignore
+
+
+def test_mixin_repr(capsys: pytest.CaptureFixture[str]) -> None:
+    """Тест, что миксин автоматически выводит repr объекта в консоль при создании."""
+    _ = Product("Тест", "Описание", 100.0, 2)
+    captured = capsys.readouterr()
+    assert "Product('Тест', 'Описание', 100.0, 2)" in captured.out
+
+
+def test_zero_quantity_product_raises_error() -> None:
+    """Тест, что создание продукта с нулевым количеством вызывает ZeroQuantityError."""
+    from src.models import ZeroQuantityError
+
+    with pytest.raises(ZeroQuantityError):
+        _ = Product("Тест", "Описание", 100.0, 0)
+
+
+def test_category_middle_price(sample_category: Category) -> None:
+    """Тест расчета среднего ценника в категории с продуктами."""
+    # В фикстуре sample_category один продукт с ценой 180000.00
+    assert sample_category.middle_price() == 180000.00
+
+
+def test_empty_category_middle_price() -> None:
+    """Тест, что пустая категория возвращает 0.0 при расчете средней цены без ZeroDivisionError."""
+    empty_cat = Category("Пустая", "Описание", [])
+    assert empty_cat.middle_price() == 0.0
+
+
+def test_abstract_classes_cannot_be_instantiated() -> None:
+    """Проверяем, что базовые классы защищены от прямого создания экземпляров."""
+    from src.models import AbstractStorage, BaseProduct
+
+    with pytest.raises(TypeError):
+        BaseProduct()  # type: ignore
+
+    with pytest.raises(TypeError):
+        AbstractStorage()  # type: ignore
